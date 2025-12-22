@@ -558,16 +558,39 @@
     </div>
 
     <div class="implementation">
-        <h2>Next Steps</h2>
+        <h2>Pull Requests</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">PR</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Repository</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Content</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><a href="https://github.com/TYPO3-Documentation/render-guides/pull/1139">#1139</a></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">TYPO3-Documentation/render-guides</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">:zoom: directive + CSS + JavaScript</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><a href="https://github.com/TYPO3-Documentation/TYPO3CMS-Guide-HowToDocument/pull/503">#503</a></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">TYPO3-Documentation/TYPO3CMS-Guide-HowToDocument</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Usage documentation</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Status</h2>
         <ol>
-            <li>Review this RFC with TYPO3 Documentation Team</li>
+            <li><s>Implement CSS/JS for all zoom modes</s> ✅</li>
+            <li><s>Add <code>:zoom:</code> directive support to FigureDirective</s> ✅</li>
+            <li><s>Update documentation with usage examples</s> ✅</li>
+            <li>Review by TYPO3 Documentation Team ⏳</li>
             <li>Choose default implementation (recommend: <code>lightbox</code>)</li>
-            <li>Implement in typo3-docs-theme PHP guides renderer</li>
-            <li>Add <code>:zoom:</code> directive support to FigureDirective</li>
-            <li>Update documentation with usage examples</li>
         </ol>
 
-        <p><strong>Repository:</strong> <a href="https://github.com/CybotTM/typo3-docs-theme/tree/feature/image-zoom-lightbox">CybotTM/typo3-docs-theme (feature/image-zoom-lightbox)</a></p>
+        <p><strong>Demo Source:</strong> <a href="https://github.com/CybotTM/typo3-docs-theme/tree/feature/image-zoom-lightbox">CybotTM/typo3-docs-theme (feature/image-zoom-lightbox)</a></p>
     </div>
 
     <link rel="stylesheet" href="image-zoom.css">
