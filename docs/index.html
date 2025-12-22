@@ -390,18 +390,20 @@
         </div>
 
         <!-- CSS-Only Overlays (hidden until :target) -->
-        <div class="image-zoom-overlay" id="css-zoom1">
-            <a href="#close" class="zoom-backdrop"></a>
-            <a href="#close" class="zoom-close">×</a>
-            <a href="#close" class="zoom-image-link">
+        <div class="image-zoom-overlay" id="css-zoom1"
+             role="dialog" aria-modal="true" aria-label="Enlarged image viewer">
+            <a href="#close" class="zoom-backdrop" aria-label="Close"></a>
+            <a href="#close" class="zoom-close" aria-label="Close image">×</a>
+            <a href="#close" class="zoom-image-link" aria-label="Close image">
                 <img src="https://picsum.photos/600/400?random=9" alt="CSS-Only Demo">
             </a>
             <p class="zoom-caption">Click anywhere to close</p>
         </div>
-        <div class="image-zoom-overlay" id="css-zoom2">
-            <a href="#close" class="zoom-backdrop"></a>
-            <a href="#close" class="zoom-close">×</a>
-            <a href="#close" class="zoom-image-link">
+        <div class="image-zoom-overlay" id="css-zoom2"
+             role="dialog" aria-modal="true" aria-label="Enlarged image viewer">
+            <a href="#close" class="zoom-backdrop" aria-label="Close"></a>
+            <a href="#close" class="zoom-close" aria-label="Close image">×</a>
+            <a href="#close" class="zoom-image-link" aria-label="Close image">
                 <img src="https://picsum.photos/600/400?random=10" alt="CSS-Only Demo 2">
             </a>
             <p class="zoom-caption">Pure CSS - click anywhere to close</p>
@@ -495,7 +497,7 @@
                     <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>5. CSS-Only (Fallback)</strong></td>
                     <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">★★★★☆</td>
                     <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><span style="background: #8bc34a; color: white; padding: 0.2rem 0.5rem; border-radius: 3px;">AA</span></td>
-                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">No JS required, click anywhere to close; no focus trap, no ESC</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">No JS required, Tab/Enter, ARIA roles, click anywhere to close; no ESC, no focus trap</td>
                 </tr>
             </tbody>
         </table>
