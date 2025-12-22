@@ -320,7 +320,8 @@
             img.style.userSelect = 'none';
 
             function updateTransform() {
-                img.style.transform = 'scale(' + zoom + ') translate(' + panX + 'px, ' + panY + 'px)';
+                // translate then scale: scale happens from center, then we offset
+                img.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoom + ')';
                 container.classList.toggle('zoomed', zoom > 1);
             }
 
@@ -340,10 +341,12 @@
                     panX = 0;
                     panY = 0;
                 } else if (oldZoom !== newZoom) {
-                    // Adjust pan to zoom toward cursor position
-                    // Keep the point under cursor stationary during zoom
-                    panX = panX + mouseX * (1/oldZoom - 1/newZoom);
-                    panY = panY + mouseY * (1/oldZoom - 1/newZoom);
+                    // Pin the point under cursor: scale first, then translate
+                    // screenPos = zoom * imagePoint + pan
+                    // To keep point fixed: newPan = mousePos * (1 - newZoom/oldZoom) + oldPan * newZoom/oldZoom
+                    var ratio = newZoom / oldZoom;
+                    panX = mouseX * (1 - ratio) + panX * ratio;
+                    panY = mouseY * (1 - ratio) + panY * ratio;
                 }
 
                 zoom = newZoom;
