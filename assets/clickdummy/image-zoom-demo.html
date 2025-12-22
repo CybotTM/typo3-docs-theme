@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Zoom Feature Demo - TYPO3 Docs Theme</title>
+    <link rel="stylesheet" href="../sphinx_typo3_theme/static/css/theme.css">
+    <link rel="stylesheet" href="image-zoom.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        h1 { color: #ff8700; border-bottom: 3px solid #ff8700; padding-bottom: 0.5rem; }
+        h2 { margin-top: 2rem; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+        h3 { color: #ff8700; margin-top: 1.5rem; }
+        h4 { color: #666; margin-top: 1rem; font-size: 1rem; }
+
+        .implementation {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .implementation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-recommended { background: #c8e6c9; color: #2e7d32; }
+        .badge-fallback { background: #fff3e0; color: #e65100; }
+        .badge-advanced { background: #e3f2fd; color: #1565c0; }
+        .badge-product { background: #f3e5f5; color: #7b1fa2; }
+
+        .rst-syntax {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: "Fira Code", monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 1rem 0;
+        }
+        .comment { color: #75715e; }
+        .keyword { color: #66d9ef; }
+        .string { color: #e6db74; }
+        .option { color: #a6e22e; }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .example-box {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 1rem;
+        }
+        .example-box h4 { margin-top: 0; }
+
+        figure { margin: 1rem 0; padding: 0; }
+        figure img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        figcaption {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .specs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .spec { text-align: center; }
+        .spec-value { font-size: 1.3rem; font-weight: 600; color: #ff8700; }
+        .spec-label { font-size: 0.75rem; color: #666; }
+
+        .feature-list { margin: 1rem 0; padding-left: 1.5rem; }
+        .feature-list li { margin: 0.25rem 0; }
+
+        kbd { background: #eee; border: 1px solid #ccc; border-radius: 3px; padding: 0.1rem 0.4rem; font-family: monospace; font-size: 0.85rem; }
+
+        /* Thumbnail classes */
+        .thumbnail { width: 150px; height: 100px; object-fit: cover; cursor: zoom-in; }
+        .thumbnail-small { width: 80px; height: 60px; object-fit: cover; cursor: zoom-in; }
+
+        /* Sample images using placeholder */
+        .sample-img {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>RFC: Image Zoom for TYPO3 Docs Theme</h1>
+
+    <p>This demo showcases proposed image zoom implementations for the TYPO3 documentation theme.
+    Each approach can be enabled via <code>guides.xml</code> and controlled per-image with the <code>:zoom:</code> directive option.</p>
+
+    <div class="implementation">
+        <h2>Proposed RST Syntax</h2>
+        <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
+   <span class="option">:alt:</span> Backend screenshot
+   <span class="option">:width:</span> 150px
+   <span class="option">:zoom:</span> lightbox|gallery|inline|lens
+
+   Caption text here</pre>
+
+        <h3>guides.xml Configuration</h3>
+        <pre class="rst-syntax"><span class="keyword">&lt;extension</span> <span class="option">class</span>=<span class="string">"..."</span>
+           <span class="option">image-zoom-enabled</span>=<span class="string">"true"</span>
+           <span class="option">image-zoom-library</span>=<span class="string">"dialog"</span>  <span class="comment">&lt;!-- css|dialog|gallery|inline|lens --&gt;</span>
+           <span class="option">image-zoom-max-scale</span>=<span class="string">"4"</span>
+<span class="keyword">/&gt;</span></pre>
+    </div>
+
+    <!-- LIGHTBOX (Dialog) -->
+    <div class="implementation">
+        <div class="implementation-header">
+            <h2>1. Native Dialog Lightbox</h2>
+            <span class="badge badge-recommended">Recommended</span>
+        </div>
+
+        <div class="specs">
+            <div class="spec"><div class="spec-value">~1.2KB</div><div class="spec-label">Bundle Size</div></div>
+            <div class="spec"><div class="spec-value">97%</div><div class="spec-label">Browser Support</div></div>
+            <div class="spec"><div class="spec-value">0</div><div class="spec-label">Dependencies</div></div>
+        </div>
+
+        <ul class="feature-list">
+            <li><strong>Full accessibility</strong> - Focus trap, ESC to close</li>
+            <li><strong>Keyboard navigation</strong> - Tab, Enter, Escape</li>
+            <li><strong>Native browser support</strong> - HTML5 dialog element</li>
+        </ul>
+
+        <h3>RST Usage</h3>
+        <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
+   <span class="option">:zoom:</span> lightbox
+
+   <kbd>Tab</kbd> to focus, <kbd>Enter</kbd> to open, <kbd>ESC</kbd> to close</pre>
+
+        <div class="examples-grid">
+            <div class="example-box">
+                <h4>Thumbnail (150px)</h4>
+                <img src="https://picsum.photos/600/400?random=1" alt="Sample Image 1"
+                     class="thumbnail lightbox-trigger"
+                     data-zoom="lightbox" data-zoom-dialog="dialog1"
+                     tabindex="0" role="button" aria-haspopup="dialog">
+                <figcaption>Click or press Enter to enlarge</figcaption>
+            </div>
+            <div class="example-box">
+                <h4>Small Thumbnail (80px)</h4>
+                <img src="https://picsum.photos/600/400?random=2" alt="Sample Image 2"
+                     class="thumbnail-small lightbox-trigger"
+                     data-zoom="lightbox" data-zoom-dialog="dialog2"
+                     tabindex="0" role="button" aria-haspopup="dialog">
+                <figcaption>Fully accessible</figcaption>
+            </div>
+        </div>
+
+        <dialog class="image-lightbox-dialog" id="dialog1" aria-label="Enlarged image">
+            <button class="lightbox-close" aria-label="Close">×</button>
+            <img src="https://picsum.photos/600/400?random=1" alt="Sample Image 1">
+            <p class="lightbox-caption">Sample Image - Press ESC to close</p>
+        </dialog>
+        <dialog class="image-lightbox-dialog" id="dialog2" aria-label="Enlarged image">
+            <button class="lightbox-close" aria-label="Close">×</button>
+            <img src="https://picsum.photos/600/400?random=2" alt="Sample Image 2">
+            <p class="lightbox-caption">Full accessibility support</p>
+        </dialog>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="implementation">
+        <div class="implementation-header">
+            <h2>2. Gallery with Mouse Wheel Zoom</h2>
+            <span class="badge badge-advanced">Full Features</span>
+        </div>
+
+        <div class="specs">
+            <div class="spec"><div class="spec-value">~3KB</div><div class="spec-label">Bundle Size</div></div>
+            <div class="spec"><div class="spec-value">97%</div><div class="spec-label">Browser Support</div></div>
+            <div class="spec"><div class="spec-value">0</div><div class="spec-label">Dependencies</div></div>
+        </div>
+
+        <ul class="feature-list">
+            <li><strong>Mouse wheel zoom</strong> - Scroll to zoom 1x → 4x</li>
+            <li><strong>Pan when zoomed</strong> - Click and drag to explore</li>
+            <li><strong>Gallery navigation</strong> - Arrow keys, prev/next buttons</li>
+            <li><strong>Keyboard shortcuts</strong> - +/- zoom, 0 reset, ESC close</li>
+        </ul>
+
+        <h3>RST Usage</h3>
+        <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
+   <span class="option">:zoom:</span> gallery
+
+   Scroll to zoom, drag to pan, arrows to navigate</pre>
+
+        <div class="examples-grid">
+            <div class="example-box">
+                <h4>Image 1 of 3</h4>
+                <img src="https://picsum.photos/800/600?random=3" alt="Gallery Image 1"
+                     class="thumbnail" data-zoom="gallery" data-gallery="demo"
+                     data-zoom-src="https://picsum.photos/1600/1200?random=3"
+                     data-zoom-caption="Gallery Image 1 - High Resolution">
+                <figcaption>Click, then scroll to zoom</figcaption>
+            </div>
+            <div class="example-box">
+                <h4>Image 2 of 3</h4>
+                <img src="https://picsum.photos/800/600?random=4" alt="Gallery Image 2"
+                     class="thumbnail" data-zoom="gallery" data-gallery="demo"
+                     data-zoom-src="https://picsum.photos/1600/1200?random=4"
+                     data-zoom-caption="Gallery Image 2 - High Resolution">
+                <figcaption>Use arrows to navigate</figcaption>
+            </div>
+            <div class="example-box">
+                <h4>Image 3 of 3</h4>
+                <img src="https://picsum.photos/800/600?random=5" alt="Gallery Image 3"
+                     class="thumbnail-small" data-zoom="gallery" data-gallery="demo"
+                     data-zoom-src="https://picsum.photos/1600/1200?random=5"
+                     data-zoom-caption="Gallery Image 3 - High Resolution">
+                <figcaption>Drag to pan when zoomed</figcaption>
+            </div>
+        </div>
+    </div>
+
+    <!-- INLINE ZOOM -->
+    <div class="implementation">
+        <div class="implementation-header">
+            <h2>3. Product-Style Inline Zoom</h2>
+            <span class="badge badge-product">E-commerce Style</span>
+        </div>
+
+        <div class="specs">
+            <div class="spec"><div class="spec-value">~1KB</div><div class="spec-label">Bundle Size</div></div>
+            <div class="spec"><div class="spec-value">97%</div><div class="spec-label">Browser Support</div></div>
+            <div class="spec"><div class="spec-value">0</div><div class="spec-label">Dependencies</div></div>
+        </div>
+
+        <ul class="feature-list">
+            <li><strong>Inline wheel zoom</strong> - Zoom directly on image (no overlay)</li>
+            <li><strong>Pan when zoomed</strong> - Click and drag to explore details</li>
+            <li><strong>Double-click reset</strong> - Return to original size</li>
+            <li><strong>Stays in context</strong> - No modal, no page takeover</li>
+        </ul>
+
+        <h3>RST Usage</h3>
+        <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
+   <span class="option">:zoom:</span> inline
+
+   Scroll to zoom in place, drag to pan</pre>
+
+        <div class="examples-grid">
+            <div class="example-box">
+                <h4>Full Width Image</h4>
+                <div class="inline-zoom-container" data-zoom="inline">
+                    <img src="https://picsum.photos/600/400?random=6" alt="Inline Zoom Demo" style="max-width: 100%;">
+                    <span class="inline-zoom-hint">Scroll to zoom</span>
+                </div>
+                <figcaption>Mouse wheel: zoom | Drag: pan | Double-click: reset</figcaption>
+            </div>
+            <div class="example-box">
+                <h4>Thumbnail</h4>
+                <div class="inline-zoom-container" data-zoom="inline">
+                    <img src="https://picsum.photos/600/400?random=7" alt="Inline Zoom Thumbnail" class="thumbnail">
+                    <span class="inline-zoom-hint">Scroll to zoom</span>
+                </div>
+                <figcaption>Works with any size</figcaption>
+            </div>
+        </div>
+    </div>
+
+    <!-- LENS ZOOM -->
+    <div class="implementation">
+        <div class="implementation-header">
+            <h2>4. Magnifier Lens</h2>
+            <span class="badge badge-product">Detail View</span>
+        </div>
+
+        <div class="specs">
+            <div class="spec"><div class="spec-value">~1.5KB</div><div class="spec-label">Bundle Size</div></div>
+            <div class="spec"><div class="spec-value">97%</div><div class="spec-label">Browser Support</div></div>
+            <div class="spec"><div class="spec-value">0</div><div class="spec-label">Dependencies</div></div>
+        </div>
+
+        <ul class="feature-list">
+            <li><strong>Magnifier lens</strong> - Circular zoom follows cursor</li>
+            <li><strong>Side preview panel</strong> - Large zoomed area beside image</li>
+            <li><strong>Hover to activate</strong> - No click needed</li>
+            <li><strong>Configurable zoom factor</strong> - Default 2x magnification</li>
+        </ul>
+
+        <h3>RST Usage</h3>
+        <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
+   <span class="option">:zoom:</span> lens
+   <span class="option">:zoom-factor:</span> 2
+
+   Hover to magnify</pre>
+
+        <div class="examples-grid">
+            <div class="example-box" style="min-width: 450px;">
+                <h4>Hover over image</h4>
+                <div class="lens-zoom-container" data-zoom="lens" data-zoom-factor="2">
+                    <img src="https://picsum.photos/400/300?random=8" alt="Lens Zoom Demo" style="max-width: 250px;">
+                </div>
+                <figcaption>Lens follows cursor | Side panel shows 2x zoom</figcaption>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARISON -->
+    <div class="implementation">
+        <h2>Comparison Summary</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Option</th>
+                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #ddd;">:zoom: value</th>
+                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #ddd;">Size</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Best For</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>Dialog Lightbox</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><code>lightbox</code></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">~1.2KB</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Default, accessibility-first</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>Gallery + Wheel Zoom</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><code>gallery</code></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">~3KB</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Multiple images, detailed inspection</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>Inline Zoom</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><code>inline</code></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">~1KB</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Stay-in-context, quick inspection</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>Magnifier Lens</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><code>lens</code></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">~1.5KB</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Detail inspection, hover-based</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="implementation">
+        <h2>Next Steps</h2>
+        <ol>
+            <li>Review this RFC with TYPO3 Documentation Team</li>
+            <li>Choose default implementation (recommend: <code>lightbox</code>)</li>
+            <li>Implement in typo3-docs-theme PHP guides renderer</li>
+            <li>Add <code>:zoom:</code> directive support to FigureDirective</li>
+            <li>Update documentation with usage examples</li>
+        </ol>
+
+        <p><strong>Repository:</strong> <a href="https://github.com/CybotTM/typo3-docs-theme/tree/feature/image-zoom-lightbox">CybotTM/typo3-docs-theme (feature/image-zoom-lightbox)</a></p>
+    </div>
+
+    <link rel="stylesheet" href="image-zoom.css">
+    <script src="../js/image-zoom.js"></script>
+</body>
+</html>
