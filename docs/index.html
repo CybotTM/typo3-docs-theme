@@ -447,6 +447,55 @@
     </div>
 
     <div class="implementation">
+        <h2>Accessibility Rating</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Option</th>
+                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #ddd;">Rating</th>
+                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #ddd;">WCAG</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Key Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background: #e8f5e9;">
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>1. Native Dialog Lightbox</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">★★★★★</td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><span style="background: #4caf50; color: white; padding: 0.2rem 0.5rem; border-radius: 3px;">AA+</span></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Focus trap, ESC close, Tab/Enter, screen reader, ARIA</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>2. Gallery + Wheel Zoom</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">★★★☆☆</td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><span style="background: #ff9800; color: white; padding: 0.2rem 0.5rem; border-radius: 3px;">A</span></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">ESC close, arrow keys, +/- zoom; no focus trap, mouse for pan</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>3. Inline Zoom</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">★★☆☆☆</td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><span style="background: #9e9e9e; color: white; padding: 0.2rem 0.5rem; border-radius: 3px;">-</span></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Double-click reset; mouse wheel only, no keyboard</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>4. Magnifier Lens</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">★☆☆☆☆</td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><span style="background: #f44336; color: white; padding: 0.2rem 0.5rem; border-radius: 3px;">-</span></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Mouse hover only, no keyboard alternative</td>
+                </tr>
+                <tr style="background: #fff3e0;">
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>5. CSS-Only (Fallback)</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">★★★★☆</td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><span style="background: #8bc34a; color: white; padding: 0.2rem 0.5rem; border-radius: 3px;">AA</span></td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">No JS required, link navigation; no focus trap, no ESC</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin-top: 1.5rem;">Recommendation</h3>
+        <p><strong>Default: Native Dialog Lightbox</strong> - Best accessibility (WCAG AA+), smallest bundle (~1.2KB), native browser support with focus trap and full keyboard navigation.</p>
+    </div>
+
+    <div class="implementation">
         <h2>Next Steps</h2>
         <ol>
             <li>Review this RFC with TYPO3 Documentation Team</li>
