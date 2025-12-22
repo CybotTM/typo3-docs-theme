@@ -207,6 +207,58 @@
 }
 .lens-zoom-container:hover .zoom-result-panel { display: block; }
 
+/* CSS-Only Lightbox (No JavaScript Fallback) */
+.image-zoom-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    padding: 2rem;
+    cursor: zoom-out;
+}
+.image-zoom-overlay:target {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.image-zoom-overlay img {
+    max-width: 95vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border: none;
+    user-select: none;
+}
+.image-zoom-overlay .zoom-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+.image-zoom-overlay .zoom-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+.image-zoom-overlay .zoom-caption {
+    color: white;
+    margin-top: 1rem;
+    text-align: center;
+    font-style: italic;
+}
+.css-only-trigger {
+    cursor: zoom-in;
+    transition: opacity 0.2s ease;
+}
+.css-only-trigger:hover {
+    opacity: 0.9;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
     .lightbox-trigger,

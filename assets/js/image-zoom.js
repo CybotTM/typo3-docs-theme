@@ -326,9 +326,27 @@
 
             container.addEventListener('wheel', function(e) {
                 e.preventDefault();
+
+                // Get mouse position relative to image center
+                var rect = img.getBoundingClientRect();
+                var mouseX = e.clientX - (rect.left + rect.width / 2);
+                var mouseY = e.clientY - (rect.top + rect.height / 2);
+
+                var oldZoom = zoom;
                 var delta = e.deltaY > 0 ? -0.2 : 0.2;
-                zoom = Math.max(CONFIG.minZoom, Math.min(CONFIG.inlineMaxZoom, zoom + delta));
-                if (zoom === 1) { panX = 0; panY = 0; }
+                var newZoom = Math.max(CONFIG.minZoom, Math.min(CONFIG.inlineMaxZoom, zoom + delta));
+
+                if (newZoom === 1) {
+                    panX = 0;
+                    panY = 0;
+                } else if (oldZoom !== newZoom) {
+                    // Adjust pan to zoom toward cursor position
+                    // Keep the point under cursor stationary during zoom
+                    panX = panX + mouseX * (1/oldZoom - 1/newZoom);
+                    panY = panY + mouseY * (1/oldZoom - 1/newZoom);
+                }
+
+                zoom = newZoom;
                 updateTransform();
             }, { passive: false });
 

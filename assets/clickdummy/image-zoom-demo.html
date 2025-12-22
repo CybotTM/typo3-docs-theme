@@ -341,6 +341,64 @@
         </div>
     </div>
 
+    <!-- CSS-ONLY FALLBACK -->
+    <div class="implementation">
+        <div class="implementation-header">
+            <h2>5. CSS-Only Lightbox (No JavaScript)</h2>
+            <span class="badge badge-fallback">Fallback</span>
+        </div>
+
+        <div class="specs">
+            <div class="spec"><div class="spec-value">0 KB</div><div class="spec-label">JavaScript</div></div>
+            <div class="spec"><div class="spec-value">100%</div><div class="spec-label">Browser Support</div></div>
+            <div class="spec"><div class="spec-value">0</div><div class="spec-label">Dependencies</div></div>
+        </div>
+
+        <ul class="feature-list">
+            <li><strong>Zero JavaScript</strong> - Works even with JS disabled</li>
+            <li><strong>:target selector</strong> - Uses URL hash for state</li>
+            <li><strong>Universal support</strong> - Works in all browsers</li>
+            <li><strong>Graceful fallback</strong> - Default when JS fails</li>
+        </ul>
+
+        <h3>RST Usage</h3>
+        <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
+   <span class="option">:zoom:</span> css
+
+   Click to enlarge (works without JavaScript)</pre>
+
+        <div class="examples-grid">
+            <div class="example-box">
+                <h4>CSS-Only Example</h4>
+                <a href="#css-zoom1">
+                    <img src="https://picsum.photos/600/400?random=9" alt="CSS-Only Demo"
+                         class="thumbnail css-only-trigger">
+                </a>
+                <figcaption>Click to enlarge - no JS required</figcaption>
+            </div>
+            <div class="example-box">
+                <h4>Another Example</h4>
+                <a href="#css-zoom2">
+                    <img src="https://picsum.photos/600/400?random=10" alt="CSS-Only Demo 2"
+                         class="thumbnail-small css-only-trigger">
+                </a>
+                <figcaption>Pure CSS implementation</figcaption>
+            </div>
+        </div>
+
+        <!-- CSS-Only Overlays (hidden until :target) -->
+        <div class="image-zoom-overlay" id="css-zoom1">
+            <a href="#" class="zoom-close">×</a>
+            <img src="https://picsum.photos/600/400?random=9" alt="CSS-Only Demo">
+            <p class="zoom-caption">CSS-Only Lightbox - Click anywhere or × to close</p>
+        </div>
+        <div class="image-zoom-overlay" id="css-zoom2">
+            <a href="#" class="zoom-close">×</a>
+            <img src="https://picsum.photos/600/400?random=10" alt="CSS-Only Demo 2">
+            <p class="zoom-caption">No JavaScript required - pure CSS with :target</p>
+        </div>
+    </div>
+
     <!-- COMPARISON -->
     <div class="implementation">
         <h2>Comparison Summary</h2>
@@ -377,6 +435,12 @@
                     <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><code>lens</code></td>
                     <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">~1.5KB</td>
                     <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">Detail inspection, hover-based</td>
+                </tr>
+                <tr style="background: #fff3e0;">
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;"><strong>CSS-Only (Fallback)</strong></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;"><code>css</code></td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #eee;">0 KB JS</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #eee;">No JS required, universal fallback</td>
                 </tr>
             </tbody>
         </table>
