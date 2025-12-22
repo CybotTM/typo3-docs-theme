@@ -327,10 +327,10 @@
             container.addEventListener('wheel', function(e) {
                 e.preventDefault();
 
-                // Get mouse position relative to image center
-                var rect = img.getBoundingClientRect();
-                var mouseX = e.clientX - (rect.left + rect.width / 2);
-                var mouseY = e.clientY - (rect.top + rect.height / 2);
+                // Get mouse position relative to container center (transform origin)
+                var containerRect = container.getBoundingClientRect();
+                var mouseX = e.clientX - (containerRect.left + containerRect.width / 2);
+                var mouseY = e.clientY - (containerRect.top + containerRect.height / 2);
 
                 var oldZoom = zoom;
                 var delta = e.deltaY > 0 ? -0.2 : 0.2;

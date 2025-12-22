@@ -223,7 +223,7 @@
     background: rgba(0, 0, 0, 0.95);
     z-index: 10000;
     padding: 2rem;
-    cursor: zoom-out;
+    cursor: default;
 }
 .image-zoom-overlay:target {
     display: flex;
