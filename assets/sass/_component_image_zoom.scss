@@ -165,7 +165,7 @@ figure.zoom-enabled {
     gap: 0.5rem;
 
     button {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.5);
         border: none;
         color: white;
         width: 44px;
@@ -174,9 +174,10 @@ figure.zoom-enabled {
         cursor: pointer;
         font-size: 1.2rem;
         transition: background 0.2s ease;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 
         &:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.7);
         }
     }
 }
@@ -212,7 +213,7 @@ figure.zoom-enabled {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.5);
     border: none;
     color: white;
     width: 50px;
@@ -220,17 +221,19 @@ figure.zoom-enabled {
     cursor: pointer;
     font-size: 1.5rem;
     transition: background 0.2s ease;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.7);
     }
 
     &.prev {
-        left: 0;
+        left: 1rem;
     }
 
     &.next {
-        right: 0;
+        right: 1rem;
     }
 }
 
@@ -239,6 +242,10 @@ figure.zoom-enabled {
     top: 1rem;
     left: 1rem;
     color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .gallery-zoom-level {
