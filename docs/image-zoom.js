@@ -61,8 +61,11 @@
                 }
             });
 
+            // Close on any click (image or backdrop) - toggle behavior
             dialog.addEventListener('click', function(e) {
-                if (e.target === dialog) dialog.close();
+                // Don't close if clicking the close button (it handles itself)
+                if (e.target.classList.contains('lightbox-close')) return;
+                dialog.close();
             });
 
             var closeBtn = dialog.querySelector('.lightbox-close');
@@ -241,8 +244,14 @@
             }
         });
 
+        // Close on click - toggle behavior (but not when zoomed/panning)
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay || e.target === content) closeGallery();
+            // Don't close if clicking toolbar buttons or nav
+            if (e.target.closest('.gallery-toolbar') || e.target.closest('.gallery-nav')) return;
+            // Close if not zoomed, or if clicking backdrop/content area
+            if (!currentGallery || currentGallery.zoom <= 1) {
+                closeGallery();
+            }
         });
     }
 
