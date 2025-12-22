@@ -108,11 +108,24 @@
             var index = galleries[galleryId].images.length - 1;
             trigger.setAttribute('data-gallery-index', index);
 
+            // Make trigger keyboard accessible
+            trigger.setAttribute('tabindex', '0');
+            trigger.setAttribute('role', 'button');
+            trigger.setAttribute('aria-label', 'Open image in gallery: ' + (caption || 'Image ' + (index + 1)));
+
             trigger.addEventListener('dragstart', function(e) { e.preventDefault(); });
 
             trigger.addEventListener('click', function(e) {
                 e.preventDefault();
                 openGallery(galleryId, index);
+            });
+
+            // Keyboard support for trigger
+            trigger.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openGallery(galleryId, index);
+                }
             });
         });
 
@@ -130,8 +143,35 @@
 
         var currentGallery = null;
         var startX, startY;
+        var lastFocusedElement = null;
+
+        // Get all focusable elements in the overlay for focus trap
+        function getFocusableElements() {
+            return overlay.querySelectorAll('button:not([disabled])');
+        }
+
+        // Focus trap handler
+        function handleFocusTrap(e) {
+            if (e.key !== 'Tab') return;
+            var focusable = getFocusableElements();
+            if (focusable.length === 0) return;
+
+            var firstEl = focusable[0];
+            var lastEl = focusable[focusable.length - 1];
+
+            if (e.shiftKey && document.activeElement === firstEl) {
+                e.preventDefault();
+                lastEl.focus();
+            } else if (!e.shiftKey && document.activeElement === lastEl) {
+                e.preventDefault();
+                firstEl.focus();
+            }
+        }
 
         function openGallery(galleryId, index) {
+            // Store the element that triggered the gallery for focus return
+            lastFocusedElement = document.activeElement;
+
             currentGallery = galleries[galleryId];
             currentGallery.currentIndex = index;
             currentGallery.zoom = 1;
@@ -141,12 +181,31 @@
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
             counterTotal.textContent = currentGallery.images.length;
+
+            // Focus the close button for accessibility
+            var closeBtn = overlay.querySelector('.gallery-close');
+            if (closeBtn) {
+                setTimeout(function() { closeBtn.focus(); }, 50);
+            }
+
+            // Enable focus trap
+            overlay.addEventListener('keydown', handleFocusTrap);
         }
 
         function closeGallery() {
             overlay.classList.remove('active');
             document.body.style.overflow = '';
+
+            // Remove focus trap
+            overlay.removeEventListener('keydown', handleFocusTrap);
+
+            // Return focus to the trigger element
+            if (lastFocusedElement && lastFocusedElement.focus) {
+                lastFocusedElement.focus();
+            }
+
             currentGallery = null;
+            lastFocusedElement = null;
         }
 
         function showCurrentImage() {
@@ -278,9 +337,15 @@
 
     function createGalleryOverlay() {
         var overlay = createElement('div', 'image-gallery-overlay');
+        // ARIA attributes for accessibility
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', 'Image gallery viewer');
 
         // Counter
         var counter = createElement('span', 'gallery-counter');
+        counter.setAttribute('aria-live', 'polite');
+        counter.setAttribute('aria-atomic', 'true');
         var counterCurrent = createElement('span', 'gallery-counter-current');
         counterCurrent.textContent = '1';
         var counterTotal = createElement('span', 'gallery-counter-total');
@@ -290,17 +355,37 @@
         counter.appendChild(counterTotal);
         overlay.appendChild(counter);
 
-        // Zoom level
+        // Zoom level - announce to screen readers
         var zoomLevel = createElement('div', 'gallery-zoom-level');
         zoomLevel.textContent = '100%';
+        zoomLevel.setAttribute('aria-live', 'polite');
+        zoomLevel.setAttribute('aria-atomic', 'true');
         overlay.appendChild(zoomLevel);
 
-        // Toolbar
+        // Toolbar with accessible buttons
         var toolbar = createElement('div', 'gallery-toolbar');
-        var btnZoomOut = createElement('button', 'gallery-zoom-out', { title: 'Zoom Out (scroll down)', text: '−' });
-        var btnZoomIn = createElement('button', 'gallery-zoom-in', { title: 'Zoom In (scroll up)', text: '+' });
-        var btnZoomReset = createElement('button', 'gallery-zoom-reset', { title: 'Reset Zoom', text: '1:1' });
-        var btnClose = createElement('button', 'gallery-close', { title: 'Close (ESC)', text: '×' });
+        toolbar.setAttribute('role', 'toolbar');
+        toolbar.setAttribute('aria-label', 'Gallery controls');
+        var btnZoomOut = createElement('button', 'gallery-zoom-out', {
+            title: 'Zoom Out (scroll down)',
+            text: '−',
+            'aria-label': 'Zoom out'
+        });
+        var btnZoomIn = createElement('button', 'gallery-zoom-in', {
+            title: 'Zoom In (scroll up)',
+            text: '+',
+            'aria-label': 'Zoom in'
+        });
+        var btnZoomReset = createElement('button', 'gallery-zoom-reset', {
+            title: 'Reset Zoom',
+            text: '1:1',
+            'aria-label': 'Reset zoom to 100%'
+        });
+        var btnClose = createElement('button', 'gallery-close', {
+            title: 'Close (ESC)',
+            text: '×',
+            'aria-label': 'Close gallery'
+        });
         toolbar.appendChild(btnZoomOut);
         toolbar.appendChild(btnZoomIn);
         toolbar.appendChild(btnZoomReset);
@@ -317,9 +402,17 @@
         var caption = createElement('p', 'gallery-caption');
         overlay.appendChild(caption);
 
-        // Navigation
-        var prevBtn = createElement('button', 'gallery-nav prev gallery-prev', { title: 'Previous (←)', text: '❮' });
-        var nextBtn = createElement('button', 'gallery-nav next gallery-next', { title: 'Next (→)', text: '❯' });
+        // Navigation with accessible buttons
+        var prevBtn = createElement('button', 'gallery-nav prev gallery-prev', {
+            title: 'Previous (←)',
+            text: '❮',
+            'aria-label': 'Previous image'
+        });
+        var nextBtn = createElement('button', 'gallery-nav next gallery-next', {
+            title: 'Next (→)',
+            text: '❯',
+            'aria-label': 'Next image'
+        });
         overlay.appendChild(prevBtn);
         overlay.appendChild(nextBtn);
 
@@ -337,6 +430,22 @@
             var dragging = false;
             var startX, startY;
 
+            // Accessibility: make container focusable
+            container.setAttribute('tabindex', '0');
+            container.setAttribute('role', 'application');
+            container.setAttribute('aria-label', 'Zoomable image. Use scroll wheel, plus/minus keys, or arrow keys to zoom. Double-click or press Escape to reset.');
+
+            // Create screen reader announcement element
+            var srAnnounce = createElement('span', 'sr-only');
+            srAnnounce.setAttribute('aria-live', 'polite');
+            srAnnounce.setAttribute('aria-atomic', 'true');
+            srAnnounce.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;';
+            container.appendChild(srAnnounce);
+
+            function announceZoom() {
+                srAnnounce.textContent = 'Zoom: ' + Math.round(zoom * 100) + '%';
+            }
+
             img.addEventListener('dragstart', function(e) { e.preventDefault(); });
             img.style.userSelect = 'none';
 
@@ -344,6 +453,24 @@
                 // translate then scale: scale happens from center, then we offset
                 img.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoom + ')';
                 container.classList.toggle('zoomed', zoom > 1);
+            }
+
+            function setZoom(newZoom, centerX, centerY) {
+                var oldZoom = zoom;
+                newZoom = Math.max(CONFIG.minZoom, Math.min(CONFIG.inlineMaxZoom, newZoom));
+
+                if (newZoom === 1) {
+                    panX = 0;
+                    panY = 0;
+                } else if (oldZoom !== newZoom && centerX !== undefined) {
+                    var ratio = newZoom / oldZoom;
+                    panX = centerX * (1 - ratio) + panX * ratio;
+                    panY = centerY * (1 - ratio) + panY * ratio;
+                }
+
+                zoom = newZoom;
+                updateTransform();
+                announceZoom();
             }
 
             container.addEventListener('wheel', function(e) {
@@ -354,25 +481,68 @@
                 var mouseX = e.clientX - (containerRect.left + containerRect.width / 2);
                 var mouseY = e.clientY - (containerRect.top + containerRect.height / 2);
 
-                var oldZoom = zoom;
                 var delta = e.deltaY > 0 ? -0.2 : 0.2;
-                var newZoom = Math.max(CONFIG.minZoom, Math.min(CONFIG.inlineMaxZoom, zoom + delta));
-
-                if (newZoom === 1) {
-                    panX = 0;
-                    panY = 0;
-                } else if (oldZoom !== newZoom) {
-                    // Pin the point under cursor: scale first, then translate
-                    // screenPos = zoom * imagePoint + pan
-                    // To keep point fixed: newPan = mousePos * (1 - newZoom/oldZoom) + oldPan * newZoom/oldZoom
-                    var ratio = newZoom / oldZoom;
-                    panX = mouseX * (1 - ratio) + panX * ratio;
-                    panY = mouseY * (1 - ratio) + panY * ratio;
-                }
-
-                zoom = newZoom;
-                updateTransform();
+                setZoom(zoom + delta, mouseX, mouseY);
             }, { passive: false });
+
+            // Keyboard zoom support
+            container.addEventListener('keydown', function(e) {
+                var step = 0.25;
+                var panStep = 20;
+
+                switch(e.key) {
+                    case '+':
+                    case '=':
+                        e.preventDefault();
+                        setZoom(zoom + step, 0, 0);
+                        break;
+                    case '-':
+                        e.preventDefault();
+                        setZoom(zoom - step, 0, 0);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (zoom > 1) {
+                            panY += panStep;
+                            updateTransform();
+                        } else {
+                            setZoom(zoom + step, 0, 0);
+                        }
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (zoom > 1) {
+                            panY -= panStep;
+                            updateTransform();
+                        } else {
+                            setZoom(zoom - step, 0, 0);
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        if (zoom > 1) {
+                            panX += panStep;
+                            updateTransform();
+                        }
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        if (zoom > 1) {
+                            panX -= panStep;
+                            updateTransform();
+                        }
+                        break;
+                    case 'Escape':
+                    case '0':
+                        e.preventDefault();
+                        zoom = 1;
+                        panX = 0;
+                        panY = 0;
+                        updateTransform();
+                        announceZoom();
+                        break;
+                }
+            });
 
             img.addEventListener('mousedown', function(e) {
                 if (zoom <= 1) return;
@@ -401,6 +571,7 @@
                 panX = 0;
                 panY = 0;
                 updateTransform();
+                announceZoom();
             });
         });
     }
@@ -420,23 +591,35 @@
             container.appendChild(result);
 
             var zoomFactor = parseFloat(container.getAttribute('data-zoom-factor')) || CONFIG.lensZoomFactor;
+            var lensActive = false;
+            var lensX = 50, lensY = 50; // Default position (center percentage)
 
-            container.addEventListener('mousemove', function(e) {
+            // Accessibility: make container focusable
+            container.setAttribute('tabindex', '0');
+            container.setAttribute('role', 'application');
+            container.setAttribute('aria-label', 'Magnifier lens. Press Enter or Space to toggle lens on/off. Use arrow keys to move the lens when active.');
+
+            // Create screen reader announcement element
+            var srAnnounce = createElement('span', 'sr-only');
+            srAnnounce.setAttribute('aria-live', 'polite');
+            srAnnounce.setAttribute('aria-atomic', 'true');
+            srAnnounce.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;';
+            container.appendChild(srAnnounce);
+
+            function updateLensPosition(x, y) {
                 var rect = img.getBoundingClientRect();
-                var x = e.clientX - rect.left;
-                var y = e.clientY - rect.top;
 
-                var lensX = x - lens.offsetWidth / 2;
-                var lensY = y - lens.offsetHeight / 2;
+                var lensXPos = x - lens.offsetWidth / 2;
+                var lensYPos = y - lens.offsetHeight / 2;
 
-                lensX = Math.max(0, Math.min(rect.width - lens.offsetWidth, lensX));
-                lensY = Math.max(0, Math.min(rect.height - lens.offsetHeight, lensY));
+                lensXPos = Math.max(0, Math.min(rect.width - lens.offsetWidth, lensXPos));
+                lensYPos = Math.max(0, Math.min(rect.height - lens.offsetHeight, lensYPos));
 
-                lens.style.left = lensX + 'px';
-                lens.style.top = lensY + 'px';
+                lens.style.left = lensXPos + 'px';
+                lens.style.top = lensYPos + 'px';
 
-                var bgX = -lensX * zoomFactor;
-                var bgY = -lensY * zoomFactor;
+                var bgX = -lensXPos * zoomFactor;
+                var bgY = -lensYPos * zoomFactor;
                 lens.style.backgroundImage = 'url(' + img.src + ')';
                 lens.style.backgroundSize = (rect.width * zoomFactor) + 'px ' + (rect.height * zoomFactor) + 'px';
                 lens.style.backgroundPosition = bgX + 'px ' + bgY + 'px';
@@ -446,16 +629,105 @@
                 result.style.backgroundImage = 'url(' + img.src + ')';
                 result.style.backgroundSize = (rect.width * zoomFactor) + 'px ' + (rect.height * zoomFactor) + 'px';
                 result.style.backgroundPosition = resultBgX + 'px ' + resultBgY + 'px';
+            }
+
+            function showLens() {
+                lens.style.display = 'block';
+                result.style.display = 'block';
+                lensActive = true;
+            }
+
+            function hideLens() {
+                lens.style.display = 'none';
+                result.style.display = 'none';
+                lensActive = false;
+            }
+
+            function toggleLens() {
+                if (lensActive) {
+                    hideLens();
+                    srAnnounce.textContent = 'Lens deactivated';
+                } else {
+                    showLens();
+                    // Position lens at center
+                    var rect = img.getBoundingClientRect();
+                    var x = rect.width * (lensX / 100);
+                    var y = rect.height * (lensY / 100);
+                    updateLensPosition(x, y);
+                    srAnnounce.textContent = 'Lens activated. Use arrow keys to move.';
+                }
+            }
+
+            container.addEventListener('mousemove', function(e) {
+                var rect = img.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+
+                // Store position as percentage for keyboard use
+                lensX = (x / rect.width) * 100;
+                lensY = (y / rect.height) * 100;
+
+                updateLensPosition(x, y);
             });
 
             container.addEventListener('mouseleave', function() {
-                lens.style.display = 'none';
-                result.style.display = 'none';
+                hideLens();
             });
 
             container.addEventListener('mouseenter', function() {
-                lens.style.display = 'block';
-                result.style.display = 'block';
+                showLens();
+            });
+
+            // Keyboard support
+            container.addEventListener('keydown', function(e) {
+                var step = 5; // 5% movement
+
+                switch(e.key) {
+                    case 'Enter':
+                    case ' ':
+                        e.preventDefault();
+                        toggleLens();
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        if (lensActive) {
+                            hideLens();
+                            srAnnounce.textContent = 'Lens deactivated';
+                        }
+                        break;
+                    case 'ArrowUp':
+                        if (lensActive) {
+                            e.preventDefault();
+                            lensY = Math.max(0, lensY - step);
+                            var rect = img.getBoundingClientRect();
+                            updateLensPosition(rect.width * (lensX / 100), rect.height * (lensY / 100));
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (lensActive) {
+                            e.preventDefault();
+                            lensY = Math.min(100, lensY + step);
+                            var rect = img.getBoundingClientRect();
+                            updateLensPosition(rect.width * (lensX / 100), rect.height * (lensY / 100));
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        if (lensActive) {
+                            e.preventDefault();
+                            lensX = Math.max(0, lensX - step);
+                            var rect = img.getBoundingClientRect();
+                            updateLensPosition(rect.width * (lensX / 100), rect.height * (lensY / 100));
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (lensActive) {
+                            e.preventDefault();
+                            lensX = Math.min(100, lensX + step);
+                            var rect = img.getBoundingClientRect();
+                            updateLensPosition(rect.width * (lensX / 100), rect.height * (lensY / 100));
+                        }
+                        break;
+                }
             });
         });
     }
