@@ -188,7 +188,7 @@
             if (!currentGallery) return;
             img.style.transform = 'scale(' + currentGallery.zoom + ') translate(' + currentGallery.panX + 'px, ' + currentGallery.panY + 'px)';
             zoomLevel.textContent = Math.round(currentGallery.zoom * 100) + '%';
-            img.style.cursor = currentGallery.zoom > 1 ? 'grab' : 'zoom-in';
+            img.style.cursor = currentGallery.zoom > 1 ? 'grab' : 'zoom-out';
         }
 
         overlay.querySelector('.gallery-close').addEventListener('click', closeGallery);
