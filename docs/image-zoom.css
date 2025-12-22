@@ -230,7 +230,6 @@
     background: rgba(0, 0, 0, 0.95);
     z-index: 10000;
     padding: 2rem;
-    cursor: default;
 }
 .image-zoom-overlay:target {
     display: flex;
@@ -238,12 +237,24 @@
     justify-content: center;
     flex-direction: column;
 }
+.image-zoom-overlay .zoom-backdrop {
+    position: absolute;
+    inset: 0;
+    cursor: zoom-out;
+}
+.image-zoom-overlay .zoom-image-link {
+    position: relative;
+    z-index: 1;
+    cursor: zoom-out;
+    display: block;
+}
 .image-zoom-overlay img {
     max-width: 95vw;
     max-height: 85vh;
     object-fit: contain;
     border: none;
     user-select: none;
+    cursor: zoom-out;
 }
 .image-zoom-overlay .zoom-close {
     position: absolute;
@@ -256,6 +267,7 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     transition: background 0.2s ease;
+    z-index: 2;
 }
 .image-zoom-overlay .zoom-close:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -265,6 +277,9 @@
     margin-top: 1rem;
     text-align: center;
     font-style: italic;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
 }
 .css-only-trigger {
     cursor: zoom-in;
