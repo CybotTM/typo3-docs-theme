@@ -186,7 +186,8 @@
 
         function updateTransform() {
             if (!currentGallery) return;
-            img.style.transform = 'scale(' + currentGallery.zoom + ') translate(' + currentGallery.panX + 'px, ' + currentGallery.panY + 'px)';
+            // translate then scale: scale from center, then offset
+            img.style.transform = 'translate(' + currentGallery.panX + 'px, ' + currentGallery.panY + 'px) scale(' + currentGallery.zoom + ')';
             zoomLevel.textContent = Math.round(currentGallery.zoom * 100) + '%';
             img.style.cursor = currentGallery.zoom > 1 ? 'grab' : 'zoom-out';
         }
@@ -201,8 +202,28 @@
         content.addEventListener('wheel', function(e) {
             if (!currentGallery) return;
             e.preventDefault();
+
+            // Get mouse position relative to content center (transform origin)
+            var contentRect = content.getBoundingClientRect();
+            var mouseX = e.clientX - (contentRect.left + contentRect.width / 2);
+            var mouseY = e.clientY - (contentRect.top + contentRect.height / 2);
+
+            var oldZoom = currentGallery.zoom;
             var delta = e.deltaY > 0 ? -CONFIG.zoomStep : CONFIG.zoomStep;
-            setZoom(currentGallery.zoom + delta);
+            var newZoom = Math.max(CONFIG.minZoom, Math.min(CONFIG.maxZoom, oldZoom + delta));
+
+            if (newZoom === 1) {
+                currentGallery.panX = 0;
+                currentGallery.panY = 0;
+            } else if (oldZoom !== newZoom) {
+                // Pin the point under cursor
+                var ratio = newZoom / oldZoom;
+                currentGallery.panX = mouseX * (1 - ratio) + currentGallery.panX * ratio;
+                currentGallery.panY = mouseY * (1 - ratio) + currentGallery.panY * ratio;
+            }
+
+            currentGallery.zoom = newZoom;
+            updateTransform();
         }, { passive: false });
 
         img.addEventListener('dragstart', function(e) { e.preventDefault(); });
