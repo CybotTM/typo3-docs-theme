@@ -1,61 +1,150 @@
-/* Image Zoom Component - Compiled CSS for Demo */
+// =============================================================================
+// Image Zoom Component
+// =============================================================================
+// Provides multiple zoom modes for figures and images:
+// - lightbox: Click to open full-size in overlay (CSS-only fallback + dialog)
+// - gallery: Click to open with wheel zoom and gallery navigation
+// - inline: Wheel zoom directly on image
+// - lens: Magnifier lens follows cursor
 
-/* Thumbnail Styles */
-.thumbnail { width: 150px; height: 100px; object-fit: cover; cursor: zoom-in; }
-.thumbnail-small { width: 80px; height: 60px; object-fit: cover; cursor: zoom-in; }
+// -----------------------------------------------------------------------------
+// Base Figure Styles for Zoom
+// -----------------------------------------------------------------------------
+figure.zoom-enabled {
+    position: relative;
+    display: inline-block;
 
-/* Lightbox Trigger */
-.lightbox-trigger {
-    cursor: zoom-in;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    img {
+        cursor: zoom-in;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    &:hover img {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
 }
-.lightbox-trigger:hover { opacity: 0.9; transform: scale(1.02); }
-.lightbox-trigger:focus-visible { outline: 3px solid #ff8700; outline-offset: 2px; }
 
-/* Native Dialog Lightbox */
+// -----------------------------------------------------------------------------
+// CSS-Only Lightbox (No JavaScript Fallback)
+// -----------------------------------------------------------------------------
+.image-zoom-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    padding: 2rem;
+    cursor: zoom-out;
+
+    &:target {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    img {
+        max-width: 95vw;
+        max-height: 85vh;
+        object-fit: contain;
+        border: none;
+        user-select: none;
+    }
+
+    .zoom-close {
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        font-size: 2rem;
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    }
+
+    .zoom-caption {
+        color: white;
+        margin-top: 1rem;
+        text-align: center;
+        font-style: italic;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Native Dialog Lightbox
+// -----------------------------------------------------------------------------
 .image-lightbox-dialog {
     border: none;
     background: transparent;
     max-width: 95vw;
     max-height: 95vh;
     padding: 0;
-}
-.image-lightbox-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.92);
-    backdrop-filter: blur(4px);
-}
-.image-lightbox-dialog {
     cursor: zoom-out;
-}
-.image-lightbox-dialog img {
-    max-width: 100%;
-    max-height: 85vh;
-    object-fit: contain;
-    border: none;
-    user-select: none;
-    -webkit-user-drag: none;
-    cursor: zoom-out;
-}
-.image-lightbox-dialog .lightbox-close {
-    position: absolute;
-    top: -3rem;
-    right: 0;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-.image-lightbox-dialog .lightbox-close:hover { opacity: 1; }
-.image-lightbox-dialog .lightbox-caption {
-    color: white;
-    text-align: center;
-    margin-top: 1rem;
+
+    &::backdrop {
+        background: rgba(0, 0, 0, 0.92);
+        backdrop-filter: blur(4px);
+    }
+
+    img {
+        max-width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+        border: none;
+        user-select: none;
+        -webkit-user-drag: none;
+        cursor: zoom-out;
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: -3rem;
+        right: 0;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    .lightbox-caption {
+        color: white;
+        text-align: center;
+        margin-top: 1rem;
+    }
 }
 
-/* Gallery Overlay */
+// Trigger image styling
+.lightbox-trigger {
+    cursor: zoom-in;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 0.9;
+    }
+
+    &:focus-visible {
+        outline: 3px solid var(--color-primary, #ff8700);
+        outline-offset: 2px;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Gallery Overlay (PhotoSwipe-style)
+// -----------------------------------------------------------------------------
 .image-gallery-overlay {
     display: none;
     position: fixed;
@@ -63,28 +152,35 @@
     background: rgba(0, 0, 0, 0.95);
     z-index: 10000;
     flex-direction: column;
+
+    &.active {
+        display: flex;
+    }
 }
-.image-gallery-overlay.active { display: flex; }
 
 .gallery-toolbar {
     display: flex;
     justify-content: flex-end;
     padding: 1rem;
     gap: 0.5rem;
+
+    button {
+        background: rgba(0, 0, 0, 0.5);
+        border: none;
+        color: white;
+        width: 44px;
+        height: 44px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: background 0.2s ease;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+    }
 }
-.gallery-toolbar button {
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    color: white;
-    width: 44px;
-    height: 44px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: background 0.2s ease;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-.gallery-toolbar button:hover { background: rgba(0, 0, 0, 0.7); }
 
 .gallery-content {
     flex: 1;
@@ -93,19 +189,18 @@
     justify-content: center;
     padding: 0 2rem 2rem;
     overflow: hidden;
-}
-.gallery-content {
     cursor: zoom-out;
-}
-.gallery-content img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border: none;
-    transition: transform 0.1s ease;
-    user-select: none;
-    -webkit-user-drag: none;
-    cursor: zoom-out;
+
+    img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border: none;
+        transition: transform 0.1s ease;
+        user-select: none;
+        -webkit-user-drag: none;
+        cursor: zoom-out;
+    }
 }
 
 .gallery-caption {
@@ -128,10 +223,19 @@
     transition: background 0.2s ease;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     border-radius: 4px;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    &.prev {
+        left: 1rem;
+    }
+
+    &.next {
+        right: 1rem;
+    }
 }
-.gallery-nav:hover { background: rgba(0, 0, 0, 0.7); }
-.gallery-nav.prev { left: 1rem; border-radius: 4px; }
-.gallery-nav.next { right: 1rem; border-radius: 4px; }
 
 .gallery-counter {
     position: absolute;
@@ -156,20 +260,29 @@
     font-size: 0.85rem;
 }
 
-/* Inline Zoom Container */
+// -----------------------------------------------------------------------------
+// Product-Style Inline Zoom
+// -----------------------------------------------------------------------------
 .inline-zoom-container {
     position: relative;
     display: inline-block;
     overflow: hidden;
+
+    img {
+        transition: transform 0.1s ease;
+        cursor: zoom-in;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    &.zoomed img {
+        cursor: grab;
+    }
+
+    &.dragging img {
+        cursor: grabbing;
+    }
 }
-.inline-zoom-container img {
-    transition: transform 0.1s ease;
-    cursor: zoom-in;
-    user-select: none;
-    -webkit-user-drag: none;
-}
-.inline-zoom-container.zoomed img { cursor: grab; }
-.inline-zoom-container.dragging img { cursor: grabbing; }
 
 .inline-zoom-hint {
     position: absolute;
@@ -184,20 +297,31 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease;
-}
-.inline-zoom-container:hover .inline-zoom-hint { opacity: 1; }
-.inline-zoom-container.zoomed .inline-zoom-hint { display: none; }
 
-/* Lens Zoom */
+    .inline-zoom-container:hover & {
+        opacity: 1;
+    }
+
+    .inline-zoom-container.zoomed & {
+        display: none;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Magnifier Lens
+// -----------------------------------------------------------------------------
 .lens-zoom-container {
     position: relative;
     display: inline-block;
+
+    img {
+        cursor: crosshair;
+    }
 }
-.lens-zoom-container img { cursor: crosshair; }
 
 .zoom-lens {
     position: absolute;
-    border: 2px solid #ff8700;
+    border: 2px solid var(--color-primary, #ff8700);
     width: 100px;
     height: 100px;
     pointer-events: none;
@@ -205,98 +329,48 @@
     background-repeat: no-repeat;
     border-radius: 50%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+
+    .lens-zoom-container:hover & {
+        display: block;
+    }
 }
-.lens-zoom-container:hover .zoom-lens { display: block; }
 
 .zoom-result-panel {
-    position: absolute;
-    left: calc(100% + 1rem);
-    top: 0;
+    position: fixed;  // Use fixed positioning for viewport-aware placement
     width: 300px;
     height: 300px;
     border: 1px solid #ddd;
+    background-color: #fff;  // Add white background
     background-repeat: no-repeat;
     display: none;
     border-radius: 4px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-.lens-zoom-container:hover .zoom-result-panel { display: block; }
-
-/* CSS-Only Lightbox (No JavaScript Fallback) */
-.image-zoom-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10000;
-    padding: 2rem;
-}
-.image-zoom-overlay:target {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-}
-.image-zoom-overlay .zoom-backdrop {
-    position: absolute;
-    inset: 0;
-    cursor: zoom-out;
-}
-.image-zoom-overlay .zoom-image-link {
-    position: relative;
-    z-index: 1;
-    cursor: zoom-out;
-    display: block;
-}
-.image-zoom-overlay img {
-    max-width: 95vw;
-    max-height: 85vh;
-    object-fit: contain;
-    border: none;
-    user-select: none;
-    cursor: zoom-out;
-}
-.image-zoom-overlay .zoom-close {
-    position: absolute;
-    top: 1rem;
-    right: 1.5rem;
-    font-size: 2rem;
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    transition: background 0.2s ease;
-    z-index: 2;
-}
-.image-zoom-overlay .zoom-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-.image-zoom-overlay .zoom-caption {
-    color: white;
-    margin-top: 1rem;
-    text-align: center;
-    font-style: italic;
-    position: relative;
-    z-index: 1;
-    pointer-events: none;
-}
-.css-only-trigger {
-    cursor: zoom-in;
-    transition: opacity 0.2s ease;
-}
-.css-only-trigger:hover {
-    opacity: 0.9;
+    pointer-events: none;  // Don't interfere with mouse events
 }
 
-/* Reduced Motion */
+// -----------------------------------------------------------------------------
+// Reduced Motion
+// -----------------------------------------------------------------------------
 @media (prefers-reduced-motion: reduce) {
-    .lightbox-trigger,
+    figure.zoom-enabled img,
     .image-lightbox-dialog img,
     .gallery-content img,
-    .inline-zoom-container img,
-    .gallery-toolbar button,
-    .gallery-nav {
+    .inline-zoom-container img {
         transition: none;
     }
+}
+
+// -----------------------------------------------------------------------------
+// Thumbnails
+// -----------------------------------------------------------------------------
+.zoom-thumbnail {
+    width: 150px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.zoom-thumbnail-small {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
 }

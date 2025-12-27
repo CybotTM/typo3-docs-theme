@@ -40,21 +40,137 @@
     }
 
     // ==========================================================================
+    // Helper: Add Zoom Indicator Icon
+    // ==========================================================================
+    function addZoomIndicator(container, img, iconClass, tooltip, trigger, cursor) {
+        if (!img) return null;
+
+        // Always set image to block to prevent baseline spacing issues
+        img.style.display = 'block';
+
+        // Check if indicator is disabled via data-zoom-indicator="false"
+        var zoomIndicator = trigger ? trigger.getAttribute('data-zoom-indicator') : null;
+        if (zoomIndicator === 'false' || zoomIndicator === 'no' || zoomIndicator === '0') {
+            return null;
+        }
+
+        var indicator = createElement('span', 'zoom-indicator');
+        indicator.setAttribute('aria-hidden', 'true');
+        indicator.innerHTML = '<i class="fa ' + (iconClass || 'fa-search-plus') + '"></i>';
+        // Keep pointer-events enabled for hover/tooltip, but forward clicks/scrolls to image
+        var cursorStyle = cursor || 'zoom-in';
+        indicator.style.cssText = 'position:absolute;font-size:14px;opacity:0.7;z-index:10;color:#333;text-shadow:0 0 3px #fff, 0 0 5px #fff, 0 0 7px #fff;cursor:' + cursorStyle + ';';
+        if (tooltip) {
+            indicator.setAttribute('title', tooltip);
+        }
+
+        // Forward click events to the image
+        indicator.addEventListener('click', function(e) {
+            e.stopPropagation();
+            img.click();
+        });
+
+        // Forward wheel events to the image for inline zoom
+        indicator.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Create and dispatch a new wheel event on the image
+            var wheelEvent = new WheelEvent('wheel', {
+                deltaY: e.deltaY,
+                deltaX: e.deltaX,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                bubbles: true,
+                cancelable: true
+            });
+            img.dispatchEvent(wheelEvent);
+        }, { passive: false });
+
+        container.style.position = 'relative';
+        container.appendChild(indicator);
+
+        // Position indicator at bottom-right of actual image content (inside border)
+        function positionIndicator() {
+            if (img.offsetWidth > 0 && img.offsetHeight > 0) {
+                var imgStyle = window.getComputedStyle(img);
+                var borderRight = parseFloat(imgStyle.borderRightWidth) || 0;
+                var borderBottom = parseFloat(imgStyle.borderBottomWidth) || 0;
+                var paddingRight = parseFloat(imgStyle.paddingRight) || 0;
+                var paddingBottom = parseFloat(imgStyle.paddingBottom) || 0;
+
+                // Position from the image's offset within container, accounting for border/padding
+                var spacing = 6;
+                indicator.style.top = (img.offsetTop + img.offsetHeight - borderBottom - paddingBottom - 20 - spacing) + 'px';
+                indicator.style.left = (img.offsetLeft + img.offsetWidth - borderRight - paddingRight - 20 - spacing) + 'px';
+            }
+        }
+
+        if (img.complete) {
+            positionIndicator();
+        } else {
+            img.addEventListener('load', positionIndicator);
+        }
+        window.addEventListener('resize', positionIndicator);
+
+        return indicator;
+    }
+
+    // ==========================================================================
     // Native Dialog Lightbox
     // ==========================================================================
     function initDialogLightbox() {
         document.querySelectorAll('[data-zoom="lightbox"]').forEach(function(trigger) {
-            var dialogId = trigger.getAttribute('data-zoom-dialog');
-            var dialog = document.getElementById(dialogId);
-            if (!dialog) return;
+            // Find the image inside the figure (or use trigger if it's an img)
+            var img = trigger.tagName === 'IMG' ? trigger : trigger.querySelector('img');
+            if (!img) return;
 
-            trigger.addEventListener('dragstart', function(e) { e.preventDefault(); });
+            var imgSrc = img.src;
+            var caption = '';
+            var figcaption = trigger.querySelector('figcaption');
+            if (figcaption) {
+                caption = figcaption.textContent;
+            } else {
+                caption = img.alt || '';
+            }
 
-            trigger.addEventListener('click', function() {
+            // Create dialog dynamically
+            var dialog = createElement('dialog', 'image-lightbox-dialog');
+            var dialogImg = createElement('img', '', { src: imgSrc, alt: caption });
+            var closeBtn = createElement('button', 'lightbox-close', {
+                'aria-label': 'Close',
+                text: '×'
+            });
+            dialog.appendChild(closeBtn);
+            dialog.appendChild(dialogImg);
+
+            if (caption) {
+                var captionEl = createElement('p', 'lightbox-caption', { text: caption });
+                dialog.appendChild(captionEl);
+            }
+
+            document.body.appendChild(dialog);
+
+            // Make trigger accessible
+            img.setAttribute('tabindex', '0');
+            img.setAttribute('role', 'button');
+            img.setAttribute('aria-label', 'Click to enlarge: ' + (caption || 'image'));
+            img.classList.add('lightbox-trigger');
+
+            // Create wrapper for zoom indicator positioning
+            var wrapper = createElement('span', 'zoom-trigger-wrapper');
+            wrapper.style.cssText = 'display:inline-block;position:relative;line-height:0;';
+            img.parentNode.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+            addZoomIndicator(wrapper, img, 'fa-search-plus', 'Click to enlarge', trigger);
+
+            img.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+            img.addEventListener('click', function(e) {
+                e.preventDefault();
                 dialog.showModal();
             });
 
-            trigger.addEventListener('keydown', function(e) {
+            img.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     dialog.showModal();
@@ -68,12 +184,16 @@
                 dialog.close();
             });
 
-            var closeBtn = dialog.querySelector('.lightbox-close');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function() {
+            closeBtn.addEventListener('click', function() {
+                dialog.close();
+            });
+
+            // Close on Escape
+            dialog.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
                     dialog.close();
-                });
-            }
+                }
+            });
         });
     }
 
@@ -84,6 +204,10 @@
         var galleries = {};
 
         document.querySelectorAll('[data-zoom="gallery"]').forEach(function(trigger) {
+            // Find the image inside the figure (or use trigger if it's an img)
+            var img = trigger.tagName === 'IMG' ? trigger : trigger.querySelector('img');
+            if (!img) return;
+
             var galleryId = trigger.getAttribute('data-gallery') || 'default';
             if (!galleries[galleryId]) {
                 galleries[galleryId] = {
@@ -96,8 +220,17 @@
                 };
             }
 
-            var imgSrc = trigger.getAttribute('data-zoom-src') || trigger.src;
-            var caption = trigger.getAttribute('data-zoom-caption') || trigger.alt || '';
+            // Get image source and caption from figure structure
+            var imgSrc = trigger.getAttribute('data-zoom-src') || img.src;
+            var caption = trigger.getAttribute('data-zoom-caption') || '';
+            if (!caption) {
+                var figcaption = trigger.querySelector('figcaption');
+                if (figcaption) {
+                    caption = figcaption.textContent;
+                } else {
+                    caption = img.alt || '';
+                }
+            }
 
             galleries[galleryId].images.push({
                 src: imgSrc,
@@ -108,20 +241,28 @@
             var index = galleries[galleryId].images.length - 1;
             trigger.setAttribute('data-gallery-index', index);
 
-            // Make trigger keyboard accessible
-            trigger.setAttribute('tabindex', '0');
-            trigger.setAttribute('role', 'button');
-            trigger.setAttribute('aria-label', 'Open image in gallery: ' + (caption || 'Image ' + (index + 1)));
+            // Make the image keyboard accessible (not the figure)
+            img.setAttribute('tabindex', '0');
+            img.setAttribute('role', 'button');
+            img.setAttribute('aria-label', 'Open image in gallery: ' + (caption || 'Image ' + (index + 1)));
+            img.style.cursor = 'zoom-in';
 
-            trigger.addEventListener('dragstart', function(e) { e.preventDefault(); });
+            // Create wrapper for zoom indicator positioning
+            var wrapper = createElement('span', 'zoom-trigger-wrapper');
+            wrapper.style.cssText = 'display:inline-block;position:relative;line-height:0;';
+            img.parentNode.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+            addZoomIndicator(wrapper, img, 'fa-search-plus', 'Click to enlarge', trigger);
 
-            trigger.addEventListener('click', function(e) {
+            img.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+            img.addEventListener('click', function(e) {
                 e.preventDefault();
                 openGallery(galleryId, index);
             });
 
             // Keyboard support for trigger
-            trigger.addEventListener('keydown', function(e) {
+            img.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     openGallery(galleryId, index);
@@ -324,14 +465,21 @@
             }
         });
 
-        // Close on click - toggle behavior (but not when zoomed/panning)
+        // Close on click or reset zoom - toggle behavior
         overlay.addEventListener('click', function(e) {
             // Don't close if clicking toolbar buttons or nav
             if (e.target.closest('.gallery-toolbar') || e.target.closest('.gallery-nav')) return;
-            // Close if not zoomed, or if clicking backdrop/content area
-            if (!currentGallery || currentGallery.zoom <= 1) {
-                closeGallery();
+            // Don't act on clicks on the image itself (allows drag)
+            if (e.target === img) return;
+            if (!currentGallery) return;
+
+            // If zoomed, reset zoom first (clicking outside image acts as zoom-out)
+            if (currentGallery.zoom > 1) {
+                resetZoom();
+                return;
             }
+            // If not zoomed, close the gallery
+            closeGallery();
         });
     }
 
@@ -424,11 +572,51 @@
     // ==========================================================================
     function initInlineZoom() {
         document.querySelectorAll('[data-zoom="inline"]').forEach(function(container) {
-            var img = container.querySelector('img') || container;
+            var img = container.querySelector('img');
+            if (!img) return;
+
             var zoom = 1;
             var panX = 0, panY = 0;
             var dragging = false;
             var startX, startY;
+
+            // Add required class for CSS
+            container.classList.add('inline-zoom-container');
+
+            // Create wrapper for clipping - wrapper matches exact image size
+            var wrapper = createElement('div', 'inline-zoom-wrapper');
+            wrapper.style.cssText = 'display:inline-block;overflow:hidden;position:relative;line-height:0;';
+
+            // For figures: border/shadow are on the figure (wrapping caption too), so don't move them
+            // For span/img containers: border/shadow are on the img, so move them to wrapper using inline styles
+            // (CSS classes like with-shadow only work on img/figure elements)
+            var isFigure = container.tagName === 'FIGURE';
+            if (!isFigure) {
+                if (img.classList.contains('with-border')) {
+                    img.classList.remove('with-border');
+                    wrapper.style.border = 'var(--bs-border-width) var(--bs-border-style) var(--bs-border-color)';
+                }
+                if (img.classList.contains('with-shadow')) {
+                    img.classList.remove('with-shadow');
+                    wrapper.style.boxShadow = 'var(--bs-box-shadow)';
+                    wrapper.style.padding = '1rem';
+                    wrapper.style.marginBottom = '1.5rem';
+                }
+                img.style.border = 'none';
+                img.style.boxShadow = 'none';
+                img.style.padding = '0';
+                img.style.margin = '0';
+            }
+
+            img.parentNode.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+
+            img.style.cursor = 'zoom-in';
+            img.style.transformOrigin = 'center center';
+            img.style.display = 'block';
+
+            // Add zoom indicator to the wrapper (fa-expand for scroll zoom)
+            addZoomIndicator(wrapper, img, 'fa-expand', 'Scroll to zoom', container);
 
             // Accessibility: make container focusable
             container.setAttribute('tabindex', '0');
@@ -473,13 +661,16 @@
                 announceZoom();
             }
 
-            container.addEventListener('wheel', function(e) {
+            // Wheel zoom only on the image itself, not the whole container
+            img.addEventListener('wheel', function(e) {
                 e.preventDefault();
 
-                // Get mouse position relative to container center (transform origin)
-                var containerRect = container.getBoundingClientRect();
-                var mouseX = e.clientX - (containerRect.left + containerRect.width / 2);
-                var mouseY = e.clientY - (containerRect.top + containerRect.height / 2);
+                // Get mouse position relative to wrapper center (transform origin)
+                // Use wrapper rect, not container rect, because for figures the container
+                // includes the figcaption and is taller than the image
+                var wrapperRect = wrapper.getBoundingClientRect();
+                var mouseX = e.clientX - (wrapperRect.left + wrapperRect.width / 2);
+                var mouseY = e.clientY - (wrapperRect.top + wrapperRect.height / 2);
 
                 var delta = e.deltaY > 0 ? -0.2 : 0.2;
                 setZoom(zoom + delta, mouseX, mouseY);
@@ -584,11 +775,29 @@
             var img = container.querySelector('img');
             if (!img) return;
 
+            // Add required class for CSS styling
+            container.classList.add('lens-zoom-container');
+
+            // Ensure container has position relative for lens positioning
+            container.style.position = 'relative';
+            container.style.display = 'inline-block';
+            img.style.cursor = 'crosshair';
+
+            // Create wrapper around img for zoom indicator
+            var imgWrapper = createElement('span', 'zoom-trigger-wrapper');
+            imgWrapper.style.cssText = 'display:inline-block;position:relative;line-height:0;';
+            img.parentNode.insertBefore(imgWrapper, img);
+            imgWrapper.appendChild(img);
+            addZoomIndicator(imgWrapper, img, 'fa-search', null, container, 'crosshair');  // No tooltip - lens activates on hover
+
+            // Lens and result panel are appended to the imgWrapper (not container)
+            // so they position relative to the image
             var lens = createElement('div', 'zoom-lens');
-            container.appendChild(lens);
+            imgWrapper.appendChild(lens);
 
             var result = createElement('div', 'zoom-result-panel');
-            container.appendChild(result);
+            result.style.zIndex = '9999';  // Ensure result panel is above all other content
+            document.body.appendChild(result);  // Append to body for fixed positioning
 
             var zoomFactor = parseFloat(container.getAttribute('data-zoom-factor')) || CONFIG.lensZoomFactor;
             var lensActive = false;
@@ -608,22 +817,63 @@
 
             function updateLensPosition(x, y) {
                 var rect = img.getBoundingClientRect();
+                var style = window.getComputedStyle(img);
+                var borderLeft = parseFloat(style.borderLeftWidth) || 0;
+                var borderTop = parseFloat(style.borderTopWidth) || 0;
+                var paddingLeft = parseFloat(style.paddingLeft) || 0;
+                var paddingTop = parseFloat(style.paddingTop) || 0;
 
-                var lensXPos = x - lens.offsetWidth / 2;
-                var lensYPos = y - lens.offsetHeight / 2;
-
-                lensXPos = Math.max(0, Math.min(rect.width - lens.offsetWidth, lensXPos));
-                lensYPos = Math.max(0, Math.min(rect.height - lens.offsetHeight, lensYPos));
+                // Position lens centered on cursor (x,y are relative to image content area)
+                // Add border+padding offset since lens is positioned within imgWrapper
+                var lensXPos = x + borderLeft + paddingLeft - lens.offsetWidth / 2;
+                var lensYPos = y + borderTop + paddingTop - lens.offsetHeight / 2;
 
                 lens.style.left = lensXPos + 'px';
                 lens.style.top = lensYPos + 'px';
 
-                var bgX = -lensXPos * zoomFactor;
-                var bgY = -lensYPos * zoomFactor;
+                // Background shows magnified view - pixel at (x,y) should appear at lens center
+                // In magnified image, pixel (x,y) is at position (x*zoomFactor, y*zoomFactor)
+                // To center it in lens, offset = -(x*zoomFactor) + lensCenter
+                var lensBgX = -x * zoomFactor + lens.offsetWidth / 2;
+                var lensBgY = -y * zoomFactor + lens.offsetHeight / 2;
                 lens.style.backgroundImage = 'url(' + img.src + ')';
                 lens.style.backgroundSize = (rect.width * zoomFactor) + 'px ' + (rect.height * zoomFactor) + 'px';
-                lens.style.backgroundPosition = bgX + 'px ' + bgY + 'px';
+                lens.style.backgroundPosition = lensBgX + 'px ' + lensBgY + 'px';
 
+                // Result panel - use fixed positioning to stay within viewport
+                var resultWidth = 300;
+                var resultHeight = 300;
+                var margin = 16;
+                var viewportWidth = window.innerWidth;
+                var viewportHeight = window.innerHeight;
+
+                // Default: position to the right of the image
+                var resultX = rect.right + margin;
+                var resultY = rect.top;
+
+                // If no room on right, try left
+                if (resultX + resultWidth > viewportWidth) {
+                    resultX = rect.left - resultWidth - margin;
+                }
+
+                // If no room on left either, position below cursor
+                if (resultX < 0) {
+                    resultX = Math.max(margin, Math.min(rect.left, viewportWidth - resultWidth - margin));
+                    resultY = rect.bottom + margin;
+                }
+
+                // Ensure result stays within vertical bounds
+                if (resultY + resultHeight > viewportHeight) {
+                    resultY = viewportHeight - resultHeight - margin;
+                }
+                if (resultY < margin) {
+                    resultY = margin;
+                }
+
+                result.style.left = resultX + 'px';
+                result.style.top = resultY + 'px';
+
+                // Result panel shows magnified view centered on cursor
                 var resultBgX = -x * zoomFactor + result.offsetWidth / 2;
                 var resultBgY = -y * zoomFactor + result.offsetHeight / 2;
                 result.style.backgroundImage = 'url(' + img.src + ')';
@@ -658,24 +908,56 @@
                 }
             }
 
-            container.addEventListener('mousemove', function(e) {
+            // Get image content area (excluding border/padding)
+            function getImageContentRect() {
                 var rect = img.getBoundingClientRect();
-                var x = e.clientX - rect.left;
-                var y = e.clientY - rect.top;
+                var style = window.getComputedStyle(img);
+                var borderTop = parseFloat(style.borderTopWidth) || 0;
+                var borderLeft = parseFloat(style.borderLeftWidth) || 0;
+                var borderRight = parseFloat(style.borderRightWidth) || 0;
+                var borderBottom = parseFloat(style.borderBottomWidth) || 0;
+                var paddingTop = parseFloat(style.paddingTop) || 0;
+                var paddingLeft = parseFloat(style.paddingLeft) || 0;
+                var paddingRight = parseFloat(style.paddingRight) || 0;
+                var paddingBottom = parseFloat(style.paddingBottom) || 0;
+                return {
+                    left: rect.left + borderLeft + paddingLeft,
+                    top: rect.top + borderTop + paddingTop,
+                    right: rect.right - borderRight - paddingRight,
+                    bottom: rect.bottom - borderBottom - paddingBottom,
+                    width: rect.width - borderLeft - borderRight - paddingLeft - paddingRight,
+                    height: rect.height - borderTop - borderBottom - paddingTop - paddingBottom
+                };
+            }
+
+            // Check if point is within image content (not border/padding)
+            function isWithinImageContent(clientX, clientY) {
+                var contentRect = getImageContentRect();
+                return clientX >= contentRect.left && clientX <= contentRect.right &&
+                       clientY >= contentRect.top && clientY <= contentRect.bottom;
+            }
+
+            // Listen on IMG element, only activate when within actual image content
+            img.addEventListener('mousemove', function(e) {
+                if (!isWithinImageContent(e.clientX, e.clientY)) {
+                    if (lensActive) hideLens();
+                    return;
+                }
+
+                var contentRect = getImageContentRect();
+                var x = e.clientX - contentRect.left;
+                var y = e.clientY - contentRect.top;
 
                 // Store position as percentage for keyboard use
-                lensX = (x / rect.width) * 100;
-                lensY = (y / rect.height) * 100;
+                lensX = (x / contentRect.width) * 100;
+                lensY = (y / contentRect.height) * 100;
 
+                if (!lensActive) showLens();
                 updateLensPosition(x, y);
             });
 
-            container.addEventListener('mouseleave', function() {
+            img.addEventListener('mouseleave', function() {
                 hideLens();
-            });
-
-            container.addEventListener('mouseenter', function() {
-                showLens();
             });
 
             // Keyboard support

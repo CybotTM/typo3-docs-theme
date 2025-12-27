@@ -125,26 +125,22 @@
     </style>
 </head>
 <body>
-    <h1>RFC: Image Zoom for TYPO3 Docs Theme</h1>
+    <h1>Image Zoom Feature - TYPO3 Docs Theme</h1>
 
-    <p>This demo showcases proposed image zoom implementations for the TYPO3 documentation theme.
-    Each approach can be enabled via <code>guides.xml</code> and controlled per-image with the <code>:zoom:</code> directive option.</p>
+    <p>This demo showcases the image zoom feature for the TYPO3 documentation theme.
+    Control zoom behavior per-image with the <code>:zoom:</code> directive option.
+    See <a href="https://github.com/TYPO3-Documentation/render-guides/pull/1139">PR #1139</a> for implementation details.</p>
 
     <div class="implementation">
-        <h2>Proposed RST Syntax</h2>
+        <h2>RST Syntax</h2>
         <pre class="rst-syntax"><span class="keyword">.. figure::</span> <span class="string">/Images/screenshot.png</span>
    <span class="option">:alt:</span> Backend screenshot
-   <span class="option">:width:</span> 150px
-   <span class="option">:zoom:</span> lightbox|gallery|inline|lens
+   <span class="option">:zoom:</span> lightbox           <span class="comment"># lightbox|gallery|inline|lens</span>
+   <span class="option">:gallery:</span> screenshots     <span class="comment"># Group name for gallery navigation</span>
+   <span class="option">:zoom-indicator:</span> true    <span class="comment"># Show/hide zoom icon (default: true)</span>
+   <span class="option">:class:</span> with-border with-shadow
 
    Caption text here</pre>
-
-        <h3>guides.xml Configuration</h3>
-        <pre class="rst-syntax"><span class="keyword">&lt;extension</span> <span class="option">class</span>=<span class="string">"..."</span>
-           <span class="option">image-zoom-enabled</span>=<span class="string">"true"</span>
-           <span class="option">image-zoom-library</span>=<span class="string">"dialog"</span>  <span class="comment">&lt;!-- css|dialog|gallery|inline|lens --&gt;</span>
-           <span class="option">image-zoom-max-scale</span>=<span class="string">"4"</span>
-<span class="keyword">/&gt;</span></pre>
     </div>
 
     <!-- LIGHTBOX (Dialog) -->
